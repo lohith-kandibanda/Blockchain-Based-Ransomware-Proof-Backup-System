@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "Z:\\S-6\\4 Computer Security\\blockchain-backup-system\\contracts\\BackupContract.sol": {
+      "lastModificationDate": 1744564157009,
+      "contentHash": "29ca351f1283faf72dcd5f7431cebde9",
+      "sourceName": "contracts/BackupContract.sol",
+      "solcConfig": {
+        "version": "0.8.21",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "BackupContract"
+      ]
+    }
+  }
+}

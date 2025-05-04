@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blockchain Ransomware-Proof Backup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 420px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        input[type="file"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #005fa3;
+        }
+        .result {
+            margin-top: 20px;
+            background: #e7f3fe;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            display: none;
+        }
+        a {
+            color: #005fa3;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Secure Backup System</h1>
+    <input type="file" id="fileInput" accept="*/*"><br>
+    <input type="password" id="passwordInput" placeholder="Enter password"><br>
+    <button onclick="uploadFile()">Upload and Backup</button>
+
+    <div class="result" id="resultBox">
+        <p><strong>🆔 File ID:</strong> <span id="fileId"></span></p>
+        <p><strong>🌐 IPFS Link:</strong> <a id="ipfsLink" href="#" target="_blank">View on IPFS</a></p>
+        <p><strong>⛓️ Blockchain TxHash:</strong> <a id="txHashLink" href="#" target="_blank">View on Sepolia Explorer</a></p>
+    </div>
+</div>
+
+<script>
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const resultBox = document.getElementById('resultBox');
+        const fileIdSpan = document.getElementById('fileId');
+        const ipfsLinkAnchor = document.getElementById('ipfsLink');
+        const txHashLinkAnchor = document.getElementById('txHashLink');
+
+        if (!fileInput.files.length || !passwordInput.value) {
+            alert('⚠️ Please select a file and enter a password.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('password', passwordInput.value);
+
+        try {
+            const response = await fetch('http://127.0.0.1:5000/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            resultBox.style.display = 'block';
+
+            // Update fields
+            fileIdSpan.textContent = data.file_id;
+            ipfsLinkAnchor.href = `https://ipfs.io/ipfs/${data.ipfs_hash}`;
+            ipfsLinkAnchor.textContent = data.ipfs_hash;
+            txHashLinkAnchor.href = `https://sepolia.etherscan.io/tx/${data.tx_hash}`;
+            txHashLinkAnchor.textContent = data.tx_hash;
+
+            alert('✅ File uploaded, encrypted, and backed up successfully!');
+
+        } catch (error) {
+            console.error('Upload Error:', error);
+            alert('❌ Error uploading file. Please check server and try again.');
+        }
+    }
+</script>
+
+</body>
+</html>

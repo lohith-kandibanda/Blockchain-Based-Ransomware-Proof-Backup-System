@@ -1,0 +1,5 @@
+flask
+pycryptodome
+web3
+python-dotenv
+requests
