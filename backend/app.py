@@ -2,15 +2,17 @@ from flask import Flask, request, jsonify, send_file
 from encryption import encrypt_file, decrypt_file
 from ipfs_client import upload_to_ipfs, download_from_ipfs
 from contract_interaction import store_backup_on_chain, get_backup_from_chain
+from web3 import Web3
 import os
 import hashlib
 from flask_cors import CORS
+import uuid
 
 # -------------------------
 # 🚀 Setup Flask App
 # -------------------------
 app = Flask(__name__)
-CORS(app)  # Allow frontend → backend API requests (important)
+CORS(app)
 
 # -------------------------
 # 📂 Create Folders
@@ -35,31 +37,32 @@ def upload():
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
 
-        # Save uploaded file
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
 
-        # Encrypt file
         encrypted_path = encrypt_file(file_path, password)
-
-        # Upload encrypted file to IPFS
         ipfs_hash = upload_to_ipfs(encrypted_path)
 
-        # Generate unique File ID
-        file_id = hashlib.sha256(file.filename.encode()).hexdigest()
+        file_id = hashlib.sha256((file.filename + str(uuid.uuid4())).encode()).hexdigest()
+        original_filename = file.filename  # ✅ Capture original filename
 
-        # Store on Blockchain, get Transaction Hash
-        tx_hash = store_backup_on_chain(file_id, ipfs_hash)
+        # ✅ Compute hash from original file BEFORE encryption
+        with open(file_path, 'rb') as f:
+            file_bytes = f.read()
+        file_hash = Web3.keccak(file_bytes)
+
+        # 🔄 Now call store_backup_on_chain with the correct hash
+        tx_hash = store_backup_on_chain(file_id, ipfs_hash, file_bytes=file_hash)
 
         if not tx_hash:
             return jsonify({'error': 'Blockchain transaction failed'}), 500
 
-        # ✅ Success Response
         return jsonify({
             "message": "File uploaded and backed up successfully!",
             "file_id": file_id,
             "ipfs_hash": ipfs_hash,
-            "tx_hash": tx_hash
+            "tx_hash": tx_hash,
+            "filename": original_filename  # ✅ Return filename to frontend
         }), 200
 
     except Exception as e:
@@ -67,35 +70,50 @@ def upload():
         return jsonify({'error': str(e)}), 500
 
 # -------------------------
-# 📥 Restore/Download API
+# 📥 Restore/Download API (with integrity check)
 # -------------------------
 @app.route('/restore', methods=['POST'])
 def restore_backup():
     try:
         file_id = request.form.get('file_id')
-        version = request.form.get('version', default=1, type=int)
+        version = int(request.form.get('version', 0))
         password = request.form.get('password')
+        verify = request.form.get('verify', 'false').lower() == 'true'
+        original_filename = request.form.get('filename', f"{file_id}_v{version}_restored.bin")
 
         if not file_id or not password:
             return jsonify({'error': 'file_id and password are required'}), 400
 
-        # Fetch IPFS hash from Blockchain
-        ipfs_hash, version_onchain, owner = get_backup_from_chain(file_id, version)
+        ipfs_hash, version_onchain, owner, hash_onchain = get_backup_from_chain(file_id, version)
 
         if not ipfs_hash:
             return jsonify({'error': 'No backup found on blockchain'}), 404
 
-        # Download encrypted file
         download_from_ipfs(ipfs_hash, output_folder=DOWNLOAD_FOLDER)
 
-        encrypted_download_path = os.path.join(DOWNLOAD_FOLDER, ipfs_hash)
-        decrypted_file_path = os.path.join(DOWNLOAD_FOLDER, f"{file_id}_v{version}_decrypted")
+        encrypted_path = os.path.join(DOWNLOAD_FOLDER, ipfs_hash)
+        decrypted_path = os.path.join(DOWNLOAD_FOLDER, original_filename)
 
-        # Decrypt file
-        decrypt_file(encrypted_download_path, decrypted_file_path, password)
+        decrypt_file(encrypted_path, decrypted_path, password)
 
-        # Send decrypted file to user
-        return send_file(decrypted_file_path, as_attachment=True)
+        if verify:
+            with open(decrypted_path, 'rb') as f:
+                file_bytes = f.read()
+            local_hash = Web3.keccak(file_bytes).hex()
+            expected_hash = hash_onchain.hex() if isinstance(hash_onchain, bytes) else str(hash_onchain)
+
+            print("🔍 Expected hash:", expected_hash)
+            print("🔍 Computed hash:", local_hash)
+
+            if local_hash != expected_hash:
+                return jsonify({
+                    "error": "Integrity check failed!",
+                    "expected_hash": expected_hash,
+                    "actual_hash": local_hash
+                }), 400
+
+        # ✅ Send file with original filename
+        return send_file(decrypted_path, as_attachment=True, download_name=original_filename)
 
     except Exception as e:
         print(f"❌ Restore Error: {e}")

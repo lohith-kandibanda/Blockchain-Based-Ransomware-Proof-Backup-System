@@ -19,16 +19,18 @@ with open('../contracts/BackupContractABI.json', 'r') as abi_file:
 w3 = Web3(Web3.HTTPProvider(INFURA_URL))
 contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
 
-# 📤 Store backup (file_id + ipfs_hash) on Blockchain
-def store_backup_on_chain(file_id, ipfs_hash):
+# 📤 Store backup (file_id + ipfs_hash + file_hash) on Blockchain
+def store_backup_on_chain(file_id, ipfs_hash, file_bytes):
     try:
-        nonce = w3.eth.get_transaction_count(ACCOUNT_ADDRESS, "pending")  # Use pending
-        base_gas_price = w3.eth.gas_price
+        file_hash = file_bytes if isinstance(file_bytes, bytes) else Web3.keccak(file_bytes)
 
-        tx = contract.functions.storeBackup(file_id, ipfs_hash).build_transaction({
+        nonce = w3.eth.get_transaction_count(ACCOUNT_ADDRESS, "pending")
+        gas_price = w3.eth.gas_price
+
+        tx = contract.functions.storeBackup(file_id, ipfs_hash, file_hash).build_transaction({
             'from': ACCOUNT_ADDRESS,
             'gas': 2000000,
-            'gasPrice': int(base_gas_price * 1.1),  # Slight gas boost
+            'gasPrice': int(gas_price * 1.1),
             'nonce': nonce
         })
 
@@ -37,20 +39,21 @@ def store_backup_on_chain(file_id, ipfs_hash):
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
         print(f"✅ Backup stored successfully! TxHash: {tx_hash.hex()}")
-        return tx_hash.hex()  # IMPORTANT: return TxHash to show in frontend
+        return "0x" + tx_hash.hex()
 
     except Exception as e:
         print(f"❌ Error storing backup: {e}")
         return None
 
-# 📥 Fetch backup details (ipfs_hash, version, owner) from Blockchain
+# 📥 Fetch backup details (ipfs_hash, version, owner, file_hash) from Blockchain
 def get_backup_from_chain(file_id, version):
     try:
         backup_data = contract.functions.getBackup(file_id, version).call()
         ipfs_hash = backup_data[0]
         version_number = backup_data[1]
         owner = backup_data[2]
-        return ipfs_hash, version_number, owner
+        file_hash = backup_data[3]
+        return ipfs_hash, version_number, owner, file_hash
     except Exception as e:
         print(f"❌ Error fetching backup: {str(e)}")
-        return None, None, None
+        return None, None, None, None

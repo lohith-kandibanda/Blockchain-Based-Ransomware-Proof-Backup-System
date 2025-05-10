@@ -29,16 +29,18 @@ def encrypt_file(file_path, password):
 
     with open(file_path, 'rb') as f:
         plaintext = f.read()
+
     padded = pad(plaintext)
     ciphertext = cipher.encrypt(padded)
 
-    with open(file_path + ".enc", 'wb') as f:
+    enc_path = file_path + ".enc"
+    with open(enc_path, 'wb') as f:
         f.write(salt + cipher.iv + ciphertext)
 
-    return file_path + ".enc"
+    return enc_path
 
 
-def decrypt_file(enc_path, password):
+def decrypt_file(enc_path, output_path, password):
     with open(enc_path, 'rb') as f:
         salt = f.read(SALT_SIZE)
         iv = f.read(BLOCK_SIZE)
@@ -48,8 +50,7 @@ def decrypt_file(enc_path, password):
     cipher = AES.new(key, AES.MODE_CBC, iv)
     decrypted = unpad(cipher.decrypt(ciphertext))
 
-    out_path = enc_path.replace(".enc", ".dec")
-    with open(out_path, 'wb') as f:
+    with open(output_path, 'wb') as f:
         f.write(decrypted)
 
-    return out_path
+    return output_path

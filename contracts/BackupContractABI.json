@@ -25,6 +25,12 @@
           "internalType": "address",
           "name": "owner",
           "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "fileHash",
+          "type": "bytes32"
         }
       ],
       "name": "BackupStored",
@@ -59,6 +65,11 @@
           "internalType": "address",
           "name": "",
           "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
         }
       ],
       "stateMutability": "view",
@@ -94,6 +105,11 @@
           "internalType": "string",
           "name": "ipfsHash",
           "type": "string"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "fileHash",
+          "type": "bytes32"
         }
       ],
       "name": "storeBackup",

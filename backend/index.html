@@ -1,131 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Blockchain Ransomware-Proof Backup</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
-            text-align: center;
-            width: 420px;
-        }
-        h1 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-        input[type="file"],
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #0077cc;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #005fa3;
-        }
-        .result {
-            margin-top: 20px;
-            background: #e7f3fe;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: left;
-            display: none;
-        }
-        a {
-            color: #005fa3;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        strong {
-            color: #333;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Blockchain Ransomware-Proof Backup</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 30px 25px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      max-width: 480px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+      color: #1565c0;
+    }
+
+    input[type="file"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      margin: 5px 0 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #0d47a1;
+    }
+
+    .result {
+      margin-top: 20px;
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+
+    .result p {
+      margin: 10px 0;
+    }
+
+    code {
+      display: block;
+      background: #f5f5f5;
+      padding: 8px;
+      border-radius: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    a {
+      color: #0d47a1;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    hr {
+      border: 0;
+      height: 1px;
+      background: #ccc;
+      margin: 25px 0;
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Secure Backup System</h1>
-    <input type="file" id="fileInput" accept="*/*"><br>
-    <input type="password" id="passwordInput" placeholder="Enter password"><br>
-    <button onclick="uploadFile()">Upload and Backup</button>
+  <h1>🔐 Secure Backup System</h1>
 
-    <div class="result" id="resultBox">
-        <p><strong>🆔 File ID:</strong> <span id="fileId"></span></p>
-        <p><strong>🌐 IPFS Link:</strong> <a id="ipfsLink" href="#" target="_blank">View on IPFS</a></p>
-        <p><strong>⛓️ Blockchain TxHash:</strong> <a id="txHashLink" href="#" target="_blank">View on Sepolia Explorer</a></p>
-    </div>
+  <!-- 🔼 Upload Section -->
+  <input type="file" id="fileInput"><br>
+  <input type="password" id="passwordInput" placeholder="Enter password"><br>
+  <button onclick="uploadFile()">📤 Upload & Backup</button>
+
+  <!-- 📦 Restore Section -->
+  <hr>
+  <input type="text" id="restoreFileId" placeholder="Enter File ID"><br>
+  <input type="password" id="restorePassword" placeholder="Enter Password"><br>
+  <label><input type="checkbox" id="verifyHash"> Verify File Integrity (Blockchain)</label>
+  <button onclick="restoreFile()">📥 Restore Backup</button>
+
+  <!-- 🔍 Results -->
+  <div class="result" id="resultBox">
+    <p><strong>🆔 File ID:</strong></p>
+    <code id="fileId"></code>
+
+    <p><strong>🌐 Encrypted file location (IPFS):</strong></p>
+    <code><a id="ipfsLink" href="#" target="_blank"></a></code>
+
+    <p><strong>⛓️ Blockchain TxHash:</strong></p>
+    <code><a id="txHashLink" href="#" target="_blank"></a></code>
+  </div>
 </div>
-
 <script>
-    async function uploadFile() {
-        const fileInput = document.getElementById('fileInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const resultBox = document.getElementById('resultBox');
-        const fileIdSpan = document.getElementById('fileId');
-        const ipfsLinkAnchor = document.getElementById('ipfsLink');
-        const txHashLinkAnchor = document.getElementById('txHashLink');
+  let uploadedFilename = ''; // Store the filename returned from upload
 
-        if (!fileInput.files.length || !passwordInput.value) {
-            alert('⚠️ Please select a file and enter a password.');
-            return;
-        }
+  async function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const resultBox = document.getElementById('resultBox');
+    const fileIdSpan = document.getElementById('fileId');
+    const ipfsLinkAnchor = document.getElementById('ipfsLink');
+    const txHashLinkAnchor = document.getElementById('txHashLink');
 
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-        formData.append('password', passwordInput.value);
-
-        try {
-            const response = await fetch('http://127.0.0.1:5000/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            resultBox.style.display = 'block';
-
-            // Update fields
-            fileIdSpan.textContent = data.file_id;
-            ipfsLinkAnchor.href = `https://ipfs.io/ipfs/${data.ipfs_hash}`;
-            ipfsLinkAnchor.textContent = data.ipfs_hash;
-            txHashLinkAnchor.href = `https://sepolia.etherscan.io/tx/${data.tx_hash}`;
-            txHashLinkAnchor.textContent = data.tx_hash;
-
-            alert('✅ File uploaded, encrypted, and backed up successfully!');
-
-        } catch (error) {
-            console.error('Upload Error:', error);
-            alert('❌ Error uploading file. Please check server and try again.');
-        }
+    if (!fileInput.files.length || !passwordInput.value) {
+      alert('⚠️ Please select a file and enter a password.');
+      return;
     }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('password', passwordInput.value);
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error(`Upload error: ${response.status}`);
+      const data = await response.json();
+
+      resultBox.style.display = 'block';
+      fileIdSpan.textContent = data.file_id;
+      ipfsLinkAnchor.href = `https://gateway.pinata.cloud/ipfs/${data.ipfs_hash}?filename=view`;
+      ipfsLinkAnchor.textContent = data.ipfs_hash;
+      txHashLinkAnchor.href = `https://sepolia.etherscan.io/tx/${data.tx_hash}`;
+      txHashLinkAnchor.textContent = data.tx_hash;
+
+      uploadedFilename = data.filename || (data.file_id + "_restored");
+
+      alert('✅ File uploaded, encrypted, and backed up successfully!');
+    } catch (error) {
+      console.error('Upload Error:', error);
+      alert('❌ Error uploading file.');
+    }
+  }
+
+  async function restoreFile() {
+    const fileId = document.getElementById('restoreFileId').value;
+    const password = document.getElementById('restorePassword').value;
+    const verify = document.getElementById('verifyHash').checked;
+
+    if (!fileId || !password) {
+      alert('⚠️ Please enter File ID and Password.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file_id', fileId);
+    formData.append('password', password);
+    formData.append('verify', verify ? 'true' : 'false');
+    formData.append('filename', uploadedFilename); // ✅ Send correct filename
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/restore', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.status === 400 || response.status === 500) {
+        const errorData = await response.json();
+        alert(`❌ Restore failed: ${errorData.error}`);
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // ✅ Use uploaded filename if available
+      link.download = uploadedFilename || fileId + "_restored";
+      link.click();
+
+      alert('✅ File restored and downloaded successfully!');
+    } catch (error) {
+      console.error('Restore Error:', error);
+      alert('❌ Error restoring file.');
+    }
+  }
 </script>
+
 
 </body>
 </html>
