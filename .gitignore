@@ -1,7 +1,21 @@
+# Python Bytecode & Cache
 __pycache__/
 *.pyc
+*.pyo
+
+# Flask environment
 .env
-downloads/
+
+# IPFS storage folders
 uploads/
-.idea/
-artifacts/build-info/
+downloads/
+
+# Node & Hardhat artifacts
+node_modules/
+artifacts/
+cache/
+build/
+
+# OS Files
+.DS_Store
+Thumbs.db
