@@ -2,105 +2,138 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Blockchain Ransomware-Proof Backup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Backup System</title>
   <style>
     body {
+      margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #e3f2fd, #ffffff);
+      background: linear-gradient(135deg, #dbeafe, #fefce8);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      margin: 0;
     }
 
     .container {
-      background: #ffffff;
-      padding: 30px 25px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      max-width: 480px;
+      background-color: #ffffff;
+      padding: 40px 35px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       width: 100%;
+      max-width: 460px;
     }
 
     h1 {
-      margin-bottom: 24px;
-      color: #1565c0;
+      color: #1e3a8a;
+      font-size: 24px;
+      margin-bottom: 25px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
     }
 
     input[type="file"],
     input[type="password"],
     input[type="text"] {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0;
+      padding: 12px 14px;
+      margin: 12px 0;
       border-radius: 10px;
-      border: 1px solid #ccc;
+      border: 1px solid #cbd5e1;
       font-size: 15px;
+      background-color: #f9fafb;
+      box-sizing: border-box;
     }
 
     label {
-      display: flex;
-      align-items: center;
       font-size: 14px;
-      margin: 5px 0 10px;
+      margin: 10px 0;
+      display: block;
     }
 
     button {
       width: 100%;
       padding: 12px;
-      background-color: #1976d2;
+      background-color: #3b82f6;
       color: white;
       border: none;
       border-radius: 10px;
       font-size: 16px;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 15px;
+      transition: background 0.3s ease;
     }
 
     button:hover {
-      background-color: #0d47a1;
+      background-color: #2563eb;
+    }
+
+    hr {
+      margin: 30px 0;
+      border: none;
+      height: 1px;
+      background: #e2e8f0;
     }
 
     .result {
-      margin-top: 20px;
-      background: #e3f2fd;
+      margin-top: 25px;
+      background: #f1f5f9;
       padding: 15px;
       border-radius: 10px;
-      display: none;
       font-size: 14px;
-      word-wrap: break-word;
+      display: none;
     }
 
     .result p {
-      margin: 10px 0;
+      margin: 8px 0 4px;
+      font-weight: bold;
     }
 
     code {
-      display: block;
-      background: #f5f5f5;
+      background-color: #e2e8f0;
       padding: 8px;
+      display: block;
       border-radius: 6px;
-      overflow-x: auto;
-      white-space: nowrap;
+      word-wrap: break-word;
     }
 
     a {
-      color: #0d47a1;
+      color: #1d4ed8;
       text-decoration: none;
-      word-break: break-all;
     }
 
     a:hover {
       text-decoration: underline;
     }
 
-    hr {
-      border: 0;
-      height: 1px;
-      background: #ccc;
-      margin: 25px 0;
-    }
+    .loading {
+   display: none;
+   text-align: center;
+   color: #1e40af;
+   font-size: 14px;
+   margin-top: 12px;
+  }
+
+    .loading span {
+  display: inline-block;
+  margin-left: 8px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #1e40af;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
   </style>
 </head>
 <body>
@@ -108,32 +141,36 @@
 <div class="container">
   <h1>🔐 Secure Backup System</h1>
 
-  <!-- 🔼 Upload Section -->
-  <input type="file" id="fileInput"><br>
-  <input type="password" id="passwordInput" placeholder="Enter password"><br>
+  <!-- Upload Section -->
+  <input type="file" id="fileInput">
+  <input type="password" id="passwordInput" placeholder="Enter password">
   <button onclick="uploadFile()">📤 Upload & Backup</button>
+  <div class="loading" id="uploadLoading">📤 Uploading file, please wait...<span></span></div>
 
-  <!-- 📦 Restore Section -->
   <hr>
-  <input type="text" id="restoreFileId" placeholder="Enter File ID"><br>
-  <input type="password" id="restorePassword" placeholder="Enter Password"><br>
+
+  <!-- Restore Section -->
+  <input type="text" id="restoreFileId" placeholder="Enter File ID">
+  <input type="password" id="restorePassword" placeholder="Enter Password">
   <label><input type="checkbox" id="verifyHash"> Verify File Integrity (Blockchain)</label>
   <button onclick="restoreFile()">📥 Restore Backup</button>
+  <div class="loading" id="restoreLoading">🔄 Restoring file, please wait...<span></span></div>
 
-  <!-- 🔍 Results -->
+  <!-- Results -->
   <div class="result" id="resultBox">
-    <p><strong>🆔 File ID:</strong></p>
+    <p>🆔 File ID:</p>
     <code id="fileId"></code>
 
-    <p><strong>🌐 Encrypted file location (IPFS):</strong></p>
+    <p>🌐 IPFS Location:</p>
     <code><a id="ipfsLink" href="#" target="_blank"></a></code>
 
-    <p><strong>⛓️ Blockchain TxHash:</strong></p>
+    <p>⛓ Blockchain TxHash:</p>
     <code><a id="txHashLink" href="#" target="_blank"></a></code>
   </div>
 </div>
+
 <script>
-  let uploadedFilename = ''; // Store the filename returned from upload
+  let uploadedFilename = '';
 
   async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
@@ -142,11 +179,17 @@
     const fileIdSpan = document.getElementById('fileId');
     const ipfsLinkAnchor = document.getElementById('ipfsLink');
     const txHashLinkAnchor = document.getElementById('txHashLink');
+    const uploadBtn = document.querySelector('button[onclick="uploadFile()"]');
+    const uploadLoading = document.getElementById('uploadLoading');
 
     if (!fileInput.files.length || !passwordInput.value) {
-      alert('⚠️ Please select a file and enter a password.');
+      alert('⚠ Please select a file and enter a password.');
       return;
     }
+
+    uploadBtn.disabled = true;
+    uploadLoading.style.display = 'block';
+    resultBox.style.display = 'none';
 
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
@@ -170,10 +213,13 @@
 
       uploadedFilename = data.filename || (data.file_id + "_restored");
 
-      alert('✅ File uploaded, encrypted, and backed up successfully!');
+      alert('✅ File uploaded and backed up successfully!');
     } catch (error) {
       console.error('Upload Error:', error);
       alert('❌ Error uploading file.');
+    } finally {
+      uploadBtn.disabled = false;
+      uploadLoading.style.display = 'none';
     }
   }
 
@@ -181,17 +227,22 @@
     const fileId = document.getElementById('restoreFileId').value;
     const password = document.getElementById('restorePassword').value;
     const verify = document.getElementById('verifyHash').checked;
+    const restoreBtn = document.querySelector('button[onclick="restoreFile()"]');
+    const restoreLoading = document.getElementById('restoreLoading');
 
     if (!fileId || !password) {
-      alert('⚠️ Please enter File ID and Password.');
+      alert('⚠ Please enter File ID and Password.');
       return;
     }
+
+    restoreBtn.disabled = true;
+    restoreLoading.style.display = 'block';
 
     const formData = new FormData();
     formData.append('file_id', fileId);
     formData.append('password', password);
     formData.append('verify', verify ? 'true' : 'false');
-    formData.append('filename', uploadedFilename); // ✅ Send correct filename
+    formData.append('filename', uploadedFilename);
 
     try {
       const response = await fetch('http://127.0.0.1:5000/restore', {
@@ -209,8 +260,6 @@
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-
-      // ✅ Use uploaded filename if available
       link.download = uploadedFilename || fileId + "_restored";
       link.click();
 
@@ -218,6 +267,9 @@
     } catch (error) {
       console.error('Restore Error:', error);
       alert('❌ Error restoring file.');
+    } finally {
+      restoreBtn.disabled = false;
+      restoreLoading.style.display = 'none';
     }
   }
 </script>
